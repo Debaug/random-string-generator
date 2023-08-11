@@ -1,2 +1,3 @@
 # random-string-generator
-A random string generator.
+
+An interactive random string generator.
