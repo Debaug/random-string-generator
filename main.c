@@ -9,7 +9,8 @@
 #define DIGITS "0123456789"
 #define SPECIALS "!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"
 
-#define LETTER_COUNT 26
+#define LOWERCASE_COUNT 26
+#define UPPERCASE_COUNT 26
 #define DIGIT_COUNT 10
 #define SPECIAL_COUNT 32
 
@@ -21,7 +22,6 @@ typedef struct Flags {
 } Flags;
 
 size_t prompt_len(void);
-
 Flags prompt_flags(void);
 
 typedef int FlagsFromInputError;
@@ -38,22 +38,38 @@ typedef struct FlagsFromInputResult {
 FlagsFromInputResult flags_from_input(const char* input, Flags* p_flags);
 
 void random_string(Flags flags, char* dst, size_t len);
-
-#define CHAR_SET_BUF_LEN 2 * LETTER_COUNT + DIGIT_COUNT + SPECIAL_COUNT
+#define CHAR_SET_BUF_LEN LOWERCASE_COUNT + UPPERCASE_COUNT + DIGIT_COUNT + SPECIAL_COUNT
 size_t create_char_set(Flags flags, char char_set[CHAR_SET_BUF_LEN]);
-
 char random_char_from_set(const char* char_set, size_t len);
 
-int main(int argc, char const* argv[]) {
-    size_t len = prompt_len();
-    Flags flags = prompt_flags();
+int main(int argc, const char* argv[]) {
+    struct timespec ts;
+    timespec_get(&ts, TIME_UTC);
+    srand(ts.tv_nsec);
 
-    char* str = malloc(len + 1);
-    srand(time(NULL));
-    rand(); // first generated character is always the same, so skip it
-    random_string(flags, str, len);
+    bool quit = false;
+    bool prompt = true;
+    size_t len;
+    Flags flags;
 
-    printf("\nGenerated a random string: %s\n", str);
+    while (!quit) {
+        if (prompt) {
+            len = prompt_len();
+            flags = prompt_flags();
+        }
+
+        char* str = malloc(len + 1);
+        random_string(flags, str, len);
+        printf("\nGenerated a random string: %s\n", str);
+        free(str);
+
+        printf("\nEnter 's' to start over, 'r' recreate, or anything else to exit:  ");
+        char response[3] = {0};
+        fgets(response, 3, stdin);
+        if (strcmp(response, "s\n") == 0) prompt = true;
+        else if (strcmp(response, "r\n") == 0) prompt = false;
+        else quit = true;
+    }
 
     return EXIT_SUCCESS;
 }
@@ -147,12 +163,12 @@ size_t create_char_set(Flags flags, char char_set[CHAR_SET_BUF_LEN]) {
     size_t len = 0;
 
     if (flags.lowercases) {
-        memcpy(char_set + len, LOWERCASES, LETTER_COUNT);
-        len += LETTER_COUNT;
+        memcpy(char_set + len, LOWERCASES, LOWERCASE_COUNT);
+        len += LOWERCASE_COUNT;
     }
     if (flags.uppercases) {
-        memcpy(char_set + len, UPPERCASES, LETTER_COUNT);
-        len += LETTER_COUNT;
+        memcpy(char_set + len, UPPERCASES, UPPERCASE_COUNT);
+        len += UPPERCASE_COUNT;
     }
     if (flags.digits) {
         memcpy(char_set + len, DIGITS, DIGIT_COUNT);

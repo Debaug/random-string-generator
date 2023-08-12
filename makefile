@@ -1,4 +1,7 @@
-CFLAGS := -Wall -Wpedantic
+CFLAGS := -Wall -Wpedantic -O3
 
-random-string-generator: main.c
-	$(CC) $(CFLAGS) main.c -o random-string-generator
+rsg: main.c
+	$(CC) $(CFLAGS) main.c -o rsg
+
+run: rsg
+	./rsg
